@@ -1,0 +1,26 @@
+ clean package -DskipTests
+ docker build -t hiboss-webadmin .
+ docker build -t hiboss-webadmin-prod .
+ 
+ az login
+ az acr login --name mshop
+ 
+ docker tag hiboss-webadmin mshop.azurecr.io/hiboss-webadmin-preprod
+ docker tag hiboss-webadmin-prod mshop.azurecr.io/hiboss-webadmin-prod
+ 
+ docker push mshop.azurecr.io/hiboss-webadmin-preprod
+ docker push mshop.azurecr.io/hiboss-webadmin-prod
+ 
+ ---------------------------
+ 
+docker pull --platform=linux ubuntu
+docker run --platform=linux -d ubuntu /bin/sh -c "while true; do echo hello world; sleep 1; done"
+docker run --platform=linux -d ubuntu /bin/bash -c "while true; do echo hello world; sleep 1; done"
+--mo terminal shell trong container đang chạy
+docker exec -it ubuntu_bash /bin/bash
+--xem các tiến trình đang chạy trong container
+docker exec -it ubuntu_bash ps aux
+
+
+docker run -d microsoft/windowsservercore ping -t 127.0.0.1
+docker inspect --format '{{.Os}}' ubuntu

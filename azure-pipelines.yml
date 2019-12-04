@@ -1,0 +1,51 @@
+# Docker
+# Build a Docker image
+# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
+
+trigger:
+  - master
+
+resources:
+  - repo: self
+
+variables:
+  tag: '$(Build.BuildId)'
+  MAVEN_CACHE_FOLDER: $(Pipeline.Workspace)/.m2/repository
+  MAVEN_OPTS: "-Xmx3072m -Dmaven.test.skip=true -Dmaven.repo.local=$(MAVEN_CACHE_FOLDER)"
+
+stages:
+  - stage: Build
+    displayName: Build image
+    jobs:
+      - job: Build
+        displayName: Build
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: Cache@2
+            displayName: Cache Maven local repo
+            inputs:
+              key: 'maven | "$(Agent.OS)" | **/backend/pom.xml'
+              restoreKeys: |
+                maven | "$(Agent.OS)"
+                maven
+              path: $(MAVEN_CACHE_FOLDER)
+          - task: Maven@3
+            displayName: Build maven
+            inputs:
+              mavenPomFile: 'backend/pom.xml'
+              mavenOptions: $(MAVEN_OPTS)
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: '1.8'
+              jdkArchitectureOption: 'x64'
+              publishJUnitResults: false
+              goals: 'clean package'
+          - task: Docker@2
+            displayName: Build and push an image to container registry
+            inputs:
+              containerRegistry: 'mshop-registry'
+              repository: 'hisalon-core-test'
+              command: 'buildAndPush'
+              Dockerfile: '**/backend/mobile-endpoint/docker/Dockerfile'
+              buildContext: 'backend'
+              tags: 'latest'
